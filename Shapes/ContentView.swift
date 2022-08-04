@@ -7,27 +7,31 @@
 //This is an UI experiment app to setup programatic dice shapes for the use in another app, it's really just playing with modifier order, shape drawing and relative settings. Feel free to look at the code and implement anything you want in your own work.
 //NOTES:
 //1) Text() size clearly has break points where it jumps up a step, in between those break points the text will slightly shift up and down
-//2)
+//2) Size scales need a little fiddling with, there is a switch statement for diff sized dice
+//3) The number 4 sucks, its like the kerning for it is bad or something, it looks offset to the right and down. I do not know if this is worth bothering with.
 
 import SwiftUI
+
+
 
 struct ContentView: View {
     
     @State var frameSize = 100.0
     @State var sides = 3
-    @State var textFrameMultiplier = 0.85
+    @State var textFrameMultiplier = 0.45
+    
     var body: some View {
         VStack{
             VStack{
                 
                 ZStack{
-                    Text("10")
+                    Text("6")
                     //Setting the font to a very large size and then scaling it down to fit the container frame
                         .font(.system(size: 1000))
                         .scaledToFit()
                         .minimumScaleFactor(0.01)
                         .lineLimit(1)
-                        .frame(width: frameSize*textFrameMultiplier, height: frameSize*textFrameMultiplier, alignment: .top)
+                        .frame(width: frameSize*textFrameMultiplier, height: frameSize*textFrameMultiplier, alignment: .center)
                     Polygon(corners: sides)
                         .fill(.tertiary)
                     Polygon(corners: sides)
@@ -35,6 +39,9 @@ struct ContentView: View {
                 }
                 .frame(width: frameSize, height: frameSize, alignment: .center)
                 Spacer()
+                DieView(sides: sides, rollResult: String(40))
+                    .foregroundColor(.red)
+                
                 VStack{
                     HStack{
                         Text("Size \(frameSize)")
@@ -60,6 +67,70 @@ struct ContentView: View {
         
     }
 }
+
+
+/// Creates an orthographic projection of a real die or a polygon if there is no real world example
+struct DieView: View{
+    var sides: Int
+    var dieShape : Int {
+        switch sides{
+        case 2 : return 20
+        case 4 : return 3
+        case 6 : return 4
+        case 8 : return 6
+        case 10 : return 6
+        case 12 : return 10
+        case 20 : return 6
+        case 100 : return 15
+            //TODO: I do not really care for this default, it conflicts with the idea of showing the orthogonal view of a die as many odd sided die just don't exist. Of course they could in the idea of a log style die.
+        default : return sides
+        }
+    }
+    //We are taking the result as a string to allow for the use of emoji as die faces.
+    var rollResult: String
+    var textFrameMultiplier : Double {
+        switch dieShape{
+        case 3 : return 0.42
+        case 4 : return 1
+        case 5 : return 0.65
+        default: return 0.70
+            
+        }
+    }
+    
+    var body: some View{
+        GeometryReader { geo in
+            
+            ZStack{
+                Text("\(rollResult)")
+                //Setting the font to a very large size and then scaling it down to fit the container frame
+                    .font(.system(size: 1000))
+                    .scaledToFit()
+                    .minimumScaleFactor(0.01)
+                    .lineLimit(1)
+                    .frame(width: min(geo.size.width, geo.size.height) * textFrameMultiplier, height: min(geo.size.width, geo.size.height) * textFrameMultiplier, alignment: .center)
+                if dieShape == 4 {
+                    
+                    Rectangle()
+                        .fill(.tertiary)
+                    Rectangle()
+                        .stroke(.tertiary, style: StrokeStyle(lineWidth: min(geo.size.width, geo.size.height) * 0.05, lineCap: .round, lineJoin: .round))
+                    
+                } else {
+                    
+                    Polygon(corners: dieShape)
+                        .fill(.tertiary)
+                    Polygon(corners: dieShape)
+                        .stroke(.tertiary, style: StrokeStyle(lineWidth: min(geo.size.width, geo.size.height) * 0.05, lineCap: .round, lineJoin: .round))
+                }
+            }
+            
+            .frame(width: min(geo.size.width, geo.size.height) , height: min(geo.size.width, geo.size.height), alignment: .center)
+            
+        }
+    }
+}
+
 
 
 struct Polygon: Shape {
@@ -118,6 +189,7 @@ struct Polygon: Shape {
         return path.applying(transform)
     }
 }
+
 
 
 struct ContentView_Previews: PreviewProvider {
