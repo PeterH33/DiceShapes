@@ -5,47 +5,55 @@
 //  Created by Peter Hartnett on 8/2/22.
 //
 //This is an UI experiment app to setup programatic dice shapes for the use in another app, it's really just playing with modifier order, shape drawing and relative settings. Feel free to look at the code and implement anything you want in your own work.
+//NOTES:
+//1) Text() size clearly has break points where it jumps up a step, in between those break points the text will slightly shift up and down
+//2)
 
 import SwiftUI
 
 struct ContentView: View {
     
-    @State var frameSlide = 0.0
+    @State var frameSize = 100.0
+    @State var sides = 3
+    @State var textFrameMultiplier = 0.85
     var body: some View {
         VStack{
             VStack{
-                //                ZStack{
-                //                    Triangle()
-                //                        .fill(.green)
-                //                    Triangle()
-                //                        .stroke(.black, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-                //                }
-                //                .frame(width: 100, height: 100, alignment: .bottom)
-                //                Rectangle()
-                //                    .stroke(.green, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-                //                    .frame(width: 100, height: 100, alignment: .center)
-                //                Hexagon()
-                //                    .stroke(.red, style: StrokeStyle(lineWidth: 5, lineCap: .round, lineJoin: .round))
-                //                    .frame(width: 100, height: 100, alignment: .center)
+                
                 ZStack{
-                    Text("20")
+                    Text("10")
+                    //Setting the font to a very large size and then scaling it down to fit the container frame
                         .font(.system(size: 1000))
                         .scaledToFit()
                         .minimumScaleFactor(0.01)
                         .lineLimit(1)
-                        .frame(width: frameSlide*0.85, height: frameSlide*0.85, alignment: .center)
-                    Polygon(corners: 6)
+                        .frame(width: frameSize*textFrameMultiplier, height: frameSize*textFrameMultiplier, alignment: .top)
+                    Polygon(corners: sides)
                         .fill(.tertiary)
-                    //                        .frame(width: 100, height: 100, alignment: .center)
-                    
-                    Polygon(corners: 6)
-                        .stroke(.tertiary, style: StrokeStyle(lineWidth: frameSlide * 0.05, lineCap: .round, lineJoin: .round))
-                    //                        .frame(width: 100, height: 100, alignment: .center)
+                    Polygon(corners: sides)
+                        .stroke(.tertiary, style: StrokeStyle(lineWidth: frameSize * 0.05, lineCap: .round, lineJoin: .round))
                 }
-                .frame(width: frameSlide, height: frameSlide, alignment: .center)
-                //                .frame(width: 200, height: 200, alignment: .center)
+                .frame(width: frameSize, height: frameSize, alignment: .center)
                 Spacer()
-                Slider(value: $frameSlide, in: 4...500)
+                VStack{
+                    HStack{
+                        Text("Size \(frameSize)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    Slider(value: $frameSize, in: 4...400)
+                }
+                Stepper("Sides \(sides)", value: $sides, in: 2...100, step: 1)
+                VStack{
+                    HStack{
+                        Text("Text size \(textFrameMultiplier)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    Slider(value: $textFrameMultiplier, in: 0...1)
+                }
             }
         }
         
@@ -105,43 +113,12 @@ struct Polygon: Shape {
         //close the shape
         path.addLine(to: CGPoint(x: center.x * cos(startAngle), y: center.y * sin(startAngle)))
         
-        // figure out how much unused space we have at the bottom of our drawing rectangle
-        let unusedSpace = (rect.height / 2 - bottomEdge) / 2
-        
         // create and apply a transform that moves our path down by that amount, centering the shape vertically
-        let transform = CGAffineTransform(translationX: center.x, y: center.y + unusedSpace)
+        let transform = CGAffineTransform(translationX: center.x, y: center.y)
         return path.applying(transform)
     }
 }
 
-struct Hexagon: Shape {
-    func path(in rect: CGRect) -> Path{
-        var path = Path()
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY*0.25))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY*0.75))
-        path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY*0.75))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY*0.25))
-        path.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
-        
-        return path
-    }
-}
-
-
-struct Triangle: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        
-        path.move(to: CGPoint(x: rect.midX, y: rect.minY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.midX, y: rect.minY))
-        
-        return path
-    }
-}
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
